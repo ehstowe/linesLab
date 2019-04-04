@@ -20,20 +20,19 @@ var drawChart = function(data)
   hw.forEach(function(d){
     d.percent=(d.grade/d.max)*100
   });
-  console.log(hw, "hw")
 //scales
 
 // grab svg
   var screen =
   {
     width: 600,
-    height: 500
+    height: 600
   }
 
   var margins =
   {
     top:10,
-    bottom:40,
+    bottom:100,
     left:40,
     right:10
   }
@@ -49,18 +48,22 @@ var drawChart = function(data)
             xScale=d3.scaleLinear()
                       .domain([0,40])
                       //.domain([0,d3.max(hw, function(d){return d.day;})])
-                      .range([0, 600]);
+                      .range([0, width]);
             yScale=d3.scaleLinear()
                       .domain([0,100])
-                      .range([500,0]);
+                      .range([height,0]);
+  var plotLand = svg.append('g')
+                    .classed("plot",true)
 
-  var xA = margins.top+height+10;
+                    .attr("transform","translate(40,10)");
+
+  var xA = margins.top+height;
   var xAxis = d3.axisBottom(xScale);
   svg.append('g').classed('xAxis',true)
       .call(xAxis)
-      .attr('transform','translate('+ margins.left + ','+xA+')' );
+      .attr('transform','translate('+ margins.left + ','+(xA)+')' );
   var yAxis = d3.axisLeft(yScale);
-  var yA = margins.left-10;
+  var yA = margins.left+10;
   svg.append('g').classed('yAxis',true)
       .call(yAxis)
       .attr('transform','translate('+yA+ ','+'10'+')' );
@@ -68,11 +71,9 @@ var drawChart = function(data)
 //make line
 var drawLine = d3.line()
                 .x(function(d,i){
-                  console.log(d, "d")
-                  console.log(d.day, "d.day")
                   return xScale(d.day)})
                 .y(function(d){return yScale(d.percent)});
-svg.append('path')
+plotLand.append('path')
       .datum(hw)
       .attr('class',"line")
       .attr('d',drawLine)
@@ -84,54 +85,59 @@ var change_view =
       .on('click',function()
           {
           click+=1;
-          updateChart(svg, hw, xScale, yScale, click);
+          svg.selectAll("path.line")
+            .attr("stroke", "none")
+          svg.selectAll("path.area")
+            .attr("stroke", "none")
+            .attr("fill", "none")
+          updateChart(svg, hw, xScale, yScale, click, plotLand);
+
           return click
+
           })
 
 
 }
 
-var updateChart = function(svg, hw, xScale, yScale, click)
+var updateChart = function(svg, hw, xScale, yScale, click, plotLand)
 {
 
-console.log(hw);
+
 if(click%2==1)
 {
 var drawArea=d3.area()
-.x(function(d){return xScale(d.day)
-})
+.x(function(d){return xScale(d.day)})
 .y0(function(d){return yScale.range()[0]})
 .y1(function(d){return yScale(d.percent)})
 
-svg.append('path')
+plotLand.append('path')
   .datum(hw)
   .attr('class','area')
-  .attr('d',drawArea)
-  ;
+  .attr("fill", "green")
+  .attr('d',drawArea);
 
-  if(click>1){
-    svg.select("path.area.hidden")
-    .classed("hidden", false)
+
   }
-}
+
 else if(click%2==0)
 {
-  svg.select("path.area")
-    .classed('hidden',true);
+
+
+
   var drawLine = d3.line()
                   .x(function(d,i){
-                    console.log(d, "d")
-                    console.log(d.day, "d.day")
                     return xScale(d.day)})
                   .y(function(d){return yScale(d.percent)});
-  svg.append('path')
+  plotLand.append('path')
         .datum(hw)
         .attr('class',"line")
         .attr('d',drawLine)
         .attr("fill", "none")
         .attr("stroke", "red");
 
+
+
+
 }
-clicked+=1;
 
 }
